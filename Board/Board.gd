@@ -26,7 +26,7 @@ func _ready():
 	play_button_animation(0)
 
 	# Create sequence
-	for _i in range(1, rounds):
+	for _i in range(1, 10):
 		var rng = RandomNumberGenerator.new()
 		var numbers = []
 		rng.randomize()
@@ -52,6 +52,7 @@ func show_sequence():
 	print(sequences)
 	while state != GameState.END:
 		var sequence = sequences[current_sequence_index]
+
 		print("sequence : ", sequence)
 		for number in sequence:
 			play_button_animation(number)
@@ -66,15 +67,29 @@ func show_sequence():
 		while state == GameState.GUESS:
 			yield(get_tree().create_timer(1), "timeout")
 				
-		# TOOD Show succesfull text here
-		# TODO Add to the score from here
-		Stats.emit_signal("update_score", sequence.size() + 1)
+		if state != GameState.END:
+			Stats.emit_signal("update_score", sequence.size() + 1)
+			Stats.emit_signal("on_notification", "CORRECT!")
 
-		yield(get_tree().create_timer(1), "timeout")
-		current_sequence_index += 1
+			yield(get_tree().create_timer(1), "timeout")
 
-		# Increase speed every sequence
-		# speed -= .25
+			if current_sequence_index >= sequences.size() - 1:
+				state = GameState.END
+			else:
+				current_sequence_index += 1
+				Stats.emit_signal("on_notification_close")
+
+			# Increase speed every sequence
+			# speed -= .25
+
+	if current_sequence_index >= sequences.size() - 1:
+		Stats.emit_signal("on_notification", "Game over!")
+	else:
+		Stats.emit_signal("on_notification", "You guessed wrong.")
+		Stats.reset()
+
+	yield(get_tree().create_timer(1), "timeout")
+	get_tree().change_scene("res://Scenes/Menu.tscn")
 
 
 func _input(event):
@@ -110,6 +125,7 @@ func process_guesses():
 	else:
 		print("more numbers still to guess")
 
+
 func check_player_guesses() -> bool:
 	# Technically this should never happen
 	if player_quesses.size() != sequences[current_sequence_index].size():
@@ -123,6 +139,7 @@ func check_player_guesses() -> bool:
 		# 	return false
 
 	return true
+
 
 func play_button_animation(index: int):
 	audioPlayer.stream = null
