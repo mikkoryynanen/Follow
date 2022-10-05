@@ -8,7 +8,8 @@ var current_sequence_index = 0
 
 enum GameState {
 	SHOW,
-	GUESS
+	GUESS,
+	END
 }
 var state = GameState.SHOW
 
@@ -49,7 +50,7 @@ func show_sequence():
 	yield(get_tree().create_timer(speed), "timeout")
 
 	print(sequences)
-	while true:
+	while state != GameState.END:
 		var sequence = sequences[current_sequence_index]
 		print("sequence : ", sequence)
 		for number in sequence:
@@ -67,6 +68,7 @@ func show_sequence():
 				
 		# TOOD Show succesfull text here
 		# TODO Add to the score from here
+		Stats.emit_signal("update_score", sequence.size() + 1)
 
 		yield(get_tree().create_timer(1), "timeout")
 		current_sequence_index += 1
@@ -104,6 +106,7 @@ func process_guesses():
 			player_quesses.clear()
 		else:
 			print("player failed. Game over state")
+			state = GameState.END
 	else:
 		print("more numbers still to guess")
 
